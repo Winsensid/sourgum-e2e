@@ -1,8 +1,7 @@
 # Sourgum E2E Automation Framework
 
-A senior-grade end-to-end test automation framework built with **Playwright** and **TypeScript**, targeting [sourgum.com](https://www.sourgum.com).
+end-to-end test automation framework built with **Playwright** and **TypeScript**, targeting [sourgum.com](https://www.sourgum.com).
 
-Designed to demonstrate industry-standard QA engineering practices:
 - **Page Object Model (POM)** — all selectors and interactions abstracted into typed page classes
 - **Custom Fixtures** — Playwright's `test` is extended to auto-inject page objects into every test
 - **Strict TypeScript** — full `strict` mode, no `any`, typed credentials and environment config
