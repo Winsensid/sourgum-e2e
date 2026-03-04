@@ -1,0 +1,82 @@
+name: Playwright E2E Tests
+
+on:
+  # Run on every push to main to catch regressions immediately
+  push:
+    branches:
+      - main
+
+  # Run on every pull request targeting main before merging
+  pull_request:
+    branches:
+      - main
+
+  # Scheduled runs: twice daily at 08:00 UTC and 20:00 UTC
+  # This catches issues caused by external changes to the live site
+  # (e.g. UI updates, content changes, environment drift)
+  # Cron syntax: minute hour day-of-month month day-of-week
+  schedule:
+    - cron: '0 8 * * *'   # 08:00 UTC — morning run
+    - cron: '0 20 * * *'  # 20:00 UTC — evening run
+
+  # Allow manual trigger from the GitHub Actions tab at any time
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    name: E2E Tests (Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # 1. Check out the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Set up Node.js matching the project's minimum requirement
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # 3. Install npm dependencies (uses package-lock.json for deterministic installs)
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Install only the Chromium browser binary (keeps CI fast)
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      # 5. Write environment variables from GitHub Secrets into the .env file
+      #    Secrets are set in: GitHub repo → Settings → Secrets and variables → Actions
+      #    If a secret is not configured, a safe default is used so the pipeline
+      #    does not fail with an empty or malformed value.
+      - name: Create .env file
+        run: |
+          cat <<EOF > .env
+          BASE_URL=${{ secrets.BASE_URL || 'https://sourgum.com' }}
+          API_BASE_URL=${{ secrets.API_BASE_URL || 'https://api.example.com' }}
+          HEADLESS=true
+          CI=true
+          TEST_USER_EMAIL=${{ secrets.TEST_USER_EMAIL || '' }}
+          TEST_USER_PASSWORD=${{ secrets.TEST_USER_PASSWORD || '' }}
+          TEST_INVALID_EMAIL=${{ secrets.TEST_INVALID_EMAIL || 'invalid@sourgum.com' }}
+          TEST_INVALID_PASSWORD=${{ secrets.TEST_INVALID_PASSWORD || 'WrongPassword123!' }}
+          EOF
+
+      # 6. Run all Playwright tests
+      - name: Run Playwright tests
+        run: npm test
+
+      # 7. Upload the HTML report and test artifacts on failure so they are
+      #    available for download from the GitHub Actions run summary page
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
