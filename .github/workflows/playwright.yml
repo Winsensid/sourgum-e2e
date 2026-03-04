@@ -1,15 +1,25 @@
 name: Playwright E2E Tests
 
 on:
-  # Run on every push to main
+  # Run on every push to main to catch regressions immediately
   push:
     branches:
       - main
-  # Run on every pull request targeting main
+
+  # Run on every pull request targeting main before merging
   pull_request:
     branches:
       - main
-  # Allow manual trigger from the GitHub Actions tab
+
+  # Scheduled runs: twice daily at 08:00 UTC and 20:00 UTC
+  # This catches issues caused by external changes to the live site
+  # (e.g. UI updates, content changes, environment drift)
+  # Cron syntax: minute hour day-of-month month day-of-week
+  schedule:
+    - cron: '0 8 * * *'   # 08:00 UTC — morning run
+    - cron: '0 20 * * *'  # 20:00 UTC — evening run
+
+  # Allow manual trigger from the GitHub Actions tab at any time
   workflow_dispatch:
 
 jobs:
