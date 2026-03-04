@@ -13,11 +13,19 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 /**
+ * Returns the env variable value, or `fallback` if the variable is
+ * undefined OR an empty string (e.g. when a CI secret is not configured).
+ */
+const parseString = (value: string | undefined, fallback: string): string => {
+  return value === undefined || value.trim() === '' ? fallback : value.trim();
+};
+
+/**
  * Safely parses a string environment variable as a boolean.
- * Returns `fallback` if the variable is not defined.
+ * Returns `fallback` if the variable is not defined or empty.
  */
 const parseBoolean = (value: string | undefined, fallback: boolean): boolean => {
-  if (value === undefined) {
+  if (value === undefined || value.trim() === '') {
     return fallback;
   }
 
@@ -43,12 +51,12 @@ export interface FrameworkEnvironment {
  * Frozen to prevent accidental mutation at runtime.
  */
 export const env: FrameworkEnvironment = Object.freeze({
-  baseUrl: process.env.BASE_URL ?? 'https://sourgum.com',
-  apiBaseUrl: process.env.API_BASE_URL ?? 'https://api.example.com',
+  baseUrl: parseString(process.env.BASE_URL, 'https://sourgum.com'),
+  apiBaseUrl: parseString(process.env.API_BASE_URL, 'https://api.example.com'),
   headless: parseBoolean(process.env.HEADLESS, true),
   ci: parseBoolean(process.env.CI, false),
-  testUserEmail: process.env.TEST_USER_EMAIL ?? '',
-  testUserPassword: process.env.TEST_USER_PASSWORD ?? '',
-  testInvalidEmail: process.env.TEST_INVALID_EMAIL ?? 'invalid@sourgum.com',
-  testInvalidPassword: process.env.TEST_INVALID_PASSWORD ?? 'WrongPassword123!'
+  testUserEmail: parseString(process.env.TEST_USER_EMAIL, ''),
+  testUserPassword: parseString(process.env.TEST_USER_PASSWORD, ''),
+  testInvalidEmail: parseString(process.env.TEST_INVALID_EMAIL, 'invalid@sourgum.com'),
+  testInvalidPassword: parseString(process.env.TEST_INVALID_PASSWORD, 'WrongPassword123!')
 });

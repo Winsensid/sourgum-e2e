@@ -13,6 +13,7 @@
 import type { Locator, Page } from '@playwright/test';
 
 import { BasePage } from './base.page';
+import { env } from '../playwright-config/env';
 
 /** Credentials shape used by login() and related methods. */
 export interface LoginCredentials {
@@ -48,9 +49,22 @@ export class LoginPage extends BasePage {
     this.errorBanner = this.page.getByRole('alert');
   }
 
-  /** Navigates to the Sourgum marketing homepage (baseURL root). */
+  /**
+   * Navigates to the Sourgum marketing homepage using the absolute URL
+   * from env.baseUrl. Using an absolute URL avoids failures when Playwright's
+   * baseURL is empty or misconfigured (e.g. a missing CI secret).
+   */
   public async openMarketingHome(): Promise<void> {
-    await this.visit('/');
+    const url = env.baseUrl;
+
+    if (!/^https?:\/\//i.test(url)) {
+      throw new Error(
+        `BASE_URL is invalid or missing: "${url}". ` +
+        'Set a valid URL in .env or as a GitHub secret.'
+      );
+    }
+
+    await this.visit(url);
   }
 
   /** Clicks the Login link in the top-right navigation on the marketing site. */

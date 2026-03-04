@@ -49,18 +49,20 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       # 5. Write environment variables from GitHub Secrets into the .env file
-      #    Add each secret in: GitHub repo → Settings → Secrets and variables → Actions
+      #    Secrets are set in: GitHub repo → Settings → Secrets and variables → Actions
+      #    If a secret is not configured, a safe default is used so the pipeline
+      #    does not fail with an empty or malformed value.
       - name: Create .env file
         run: |
           cat <<EOF > .env
-          BASE_URL=${{ secrets.BASE_URL }}
-          API_BASE_URL=${{ secrets.API_BASE_URL }}
+          BASE_URL=${{ secrets.BASE_URL || 'https://sourgum.com' }}
+          API_BASE_URL=${{ secrets.API_BASE_URL || 'https://api.example.com' }}
           HEADLESS=true
           CI=true
-          TEST_USER_EMAIL=${{ secrets.TEST_USER_EMAIL }}
-          TEST_USER_PASSWORD=${{ secrets.TEST_USER_PASSWORD }}
-          TEST_INVALID_EMAIL=${{ secrets.TEST_INVALID_EMAIL }}
-          TEST_INVALID_PASSWORD=${{ secrets.TEST_INVALID_PASSWORD }}
+          TEST_USER_EMAIL=${{ secrets.TEST_USER_EMAIL || '' }}
+          TEST_USER_PASSWORD=${{ secrets.TEST_USER_PASSWORD || '' }}
+          TEST_INVALID_EMAIL=${{ secrets.TEST_INVALID_EMAIL || 'invalid@sourgum.com' }}
+          TEST_INVALID_PASSWORD=${{ secrets.TEST_INVALID_PASSWORD || 'WrongPassword123!' }}
           EOF
 
       # 6. Run all Playwright tests
